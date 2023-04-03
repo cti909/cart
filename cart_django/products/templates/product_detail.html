@@ -1,0 +1,242 @@
+{% extends 'main.html' %}
+
+{% load static %}
+
+{% block head_link %}
+<link rel="stylesheet" href="{% static 'css/product_detail.css' %}">
+<link rel="stylesheet" href="{% static 'css/cursor_pointer.css' %}">
+<link rel="stylesheet" href="{% static 'css/comment.css' %}">
+{% endblock head_link %}
+
+{% block content %}
+<div class="container">
+    <div class="rounded my-3">
+        <div class="row">
+            <div class="col">
+                <img src="/media/{{product.image}}" class="img-thumbnail resize" alt="error">
+            </div>
+            <div class="col">
+                <div class="d-flex py-2">
+                    <h3>Name of product:</h3>
+                    <h3 class="ps-2">{{product.name}}</h3>
+                </div>
+                <div class="d-flex py-2">
+                    <h3>Number of product:</h3>
+                    <h3 class="ps-2 number" value="{{product.number}}">{{product.number}}</h3>
+                </div>
+                <div class="d-flex py-2">
+                    <h3>Price:</h3>
+                    <h3 class="ps-2">{{product.price}}$</h3>
+                </div>
+                <div class="d-flex py-2">
+                    <h3 class="me-2">Enter quantity:</h3>
+                    <button class="left_button btn btn-light not-allowed" onClick="leftButton()">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <input type="text" class="quantity form-control input_num mx-2" value="1" onChange="changeInput()">
+                    <button class="right_button btn btn-light" onClick="rightButton()">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <button class="btn btn-primary" onclick="success_buy(
+                    {{product.id}},
+                    '{% url 'add_cart' %}'
+                )">
+                    Add to cart
+                </button>
+            </div>
+        </div>
+        <div class="container border border-dark rounded py-2 my-2">
+            <h5>Describe</h5>
+            <p>{{product.describe}}</p>
+        </div>
+    </div>
+</div>
+
+<div class="container py-3">
+    <h3>Comments</h3>
+    <div id="comment">
+        {% comment %} {% for comment in comments %}
+        <div class="my-2" id="item{{comment.id}}">
+            <div class="d-flex mb-2" style="margin-left: {% widthratio 40 1 comment.path_length %}px;">
+                <div class="px-2 d-block" style="font-size: 30px;">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="d-block col" id="content_card{{comment.id}}">
+                    <div class="card">
+                        <div class="card-header d-flex text-center align-items-center">
+                            <strong class="me-2">{{comment.user_id}}</strong> 
+                            {% if request.user == comment.user_id %}
+                            <div class="d-flex">
+                                <button class="btn btn-secondary mx-1" onClick="edit_cmt(
+                                                                                {{comment.id}}, 
+                                                                                '{% url 'comment_edit' product_id=product.id id=comment.id %}'
+                                                                                )">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button class="btn btn-secondary mx-1"onClick="delete_cmt(
+                                                                                {{comment.id}},
+                                                                                '{% url 'comment_delete' id=comment.id %}'
+                                                                                )">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>                  
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div id="show_content{{comment.id}}">
+                                <p id="content_cmt{{comment.id}}">{{comment.content}}</p>
+                            </div>
+                            <div class="d-flex">
+                                <button class="btn btn-secondary me-2" id="like{{comment.id}}" onClick="like_cmt(
+                                                                                                        {{comment.id}},
+                                                                                                        {{comment.count_like}},
+                                                                                                        '{% url 'like_change' id=comment.id %}',
+                                                                                                        {% if comment.check_like%} 'is_like'
+                                                                                                        {% else %} 'no_like' 
+                                                                                                        {% endif %}
+                                                                                                        )">
+                                    {% if comment.check_like != NULL %}
+                                    <i class="fa-solid fa-thumbs-up"></i>{{comment.count_like}}
+                                    {% else %}
+                                    <i class="fa-regular fa-thumbs-up"></i>{{comment.count_like}}
+                                    {% endif %}
+                                    
+                                </button>
+                                <button class="btn btn-secondary" onclick="show_reply({{comment.id}})">
+                                    Reply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="reply">
+                        <form class="my-2 hidden-comment" id="form_cmt{{comment.id}}">
+                            <input type="text" class="form-control" id="add_cmt{{comment.id}}" name="content" placeholder="New reply">
+                            <button type="button" class="btn btn-secondary" onClick="add_form(
+                                                                                        {{comment.id}},
+                                                                                        '{{comment.path}}',
+                                                                                        '{% url 'comment_add' product_id=product.id path=comment.path %}'
+                                                                                        )">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>       
+        </div>
+        {% endfor %} {% endcomment %}
+
+        
+    </div>
+    {% if request.user.is_authenticated %}
+    <div class="card mt-3">
+        <div class="card-header p-3">
+            Questions & Comments
+        </div>
+        <div class="card-body">
+            <form class="d-flex my-2" id="form_cmt0">
+                <input type="text" class="form-control " id="add_cmt0" name="content" placeholder="New comment">
+                <button type="button" class="btn btn-secondary" onClick="add_form(
+                                                                            0,
+                                                                            '0000',
+                                                                            '{% url 'comment_add' product_id=product.id path='0000' %}'
+                                                                        )">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="container py-3">
+    <h3>Related products</h3>
+    <div class="container border border-3 border-dark rounded py-3 my-3 position-relative">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+            {% for related_product in related_products %}
+            <div class="col related-product" idx>
+                <div class="card shadow-sm">
+                    <img class="img-thumbnail view_img" src="/media/{{related_product.image}}" alt="">   
+                    <div class="card-body">
+                        <h3 class="card-text text-center">{{related_product.name}}</h3>
+                        <h5 class="card-text text-center">Total product: {{related_product.number}}</h5>
+                        <h5 class="card-text text-center">Price: {{related_product.price}}$</h5>
+                        <h5 class="card-text text-center">Producer: {{related_product.producer}}</h5>
+                        <a class="d-flex justify-content-end text-decoration-none" href="{% url 'product_detail' id=related_product.id%} ">
+                            <button class="btn btn-sm btn-outline-secondary mx-1">View detail</button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block footer %}
+{% include 'footer.html' %}
+{% endblock footer %}
+{% block js_link %}
+    {% load static %}
+    <script src="{% static 'js/carte.js' %}"></script>
+    <script src="{% static 'js/show_commente.js'%}"></script>
+    {% comment %} <script src="{% static 'js/buta_control.js' %}"></script> {% endcomment %}
+    <script>
+        let show_comment = document.getElementById("comment").innerHTML;
+        $.ajax({
+            url: '{% url 'view_comment' id=product.id %}',
+            dataType: 'json',
+            type: 'GET',
+            data: {},
+            success: function(data) {
+                comments = JSON.parse(data);
+                console.log(comments)
+                array_id = [];
+                array_path = []
+                for (let i = 0; i < comments.length; i++) {
+                    array_id.push(comments[i].id);
+                    array_path.push(comments[i].path);
+                }
+                for (let i = 0; i < comments.length; i++) {                    
+                    cmt = comments[i];
+                    let comment_edit = "/comment/comment_edit/"+{{product.id}}+"/"+cmt.id;
+                    let comment_delete = "/comment/comment_delete/"+cmt.id;
+                    let like_change = "/comment/like_change/"+cmt.id;
+                    let comment_add = "/comment/comment_add/"+{{product.id}}+"/"+cmt.path;
+                    let request_user_id = 0
+                    {% if request.user.is_authenticated %}
+                        request_user_id = {{request.user.id}};
+                    {% endif %}
+                    let node_comment = create_comment(
+                                            request_user_id,
+                                            cmt.id,
+                                            cmt.content,
+                                            cmt.count_like,
+                                            cmt.path,
+                                            cmt.check_like,
+                                            cmt.user_id,
+                                            cmt.user_name,
+                                            comment_edit,
+                                            comment_delete,
+                                            like_change,
+                                            comment_add
+                                            );
+                    if (cmt.path_length == 0) {
+                        {% comment %} console.log(cmt.path); {% endcomment %}
+                        document.getElementById("comment").innerHTML += node_comment;
+                    } else {
+                        path_parent = cmt.path.slice(0,-5);
+                        index = array_path.findIndex(element => element == path_parent)
+                        id_cmt = array_id[index]
+                        document.getElementById("content_card"+id_cmt).innerHTML += node_comment;
+                    }
+                    
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log(error);
+            }
+        })
+        
+    </script>
+{% endblock js_link %}
