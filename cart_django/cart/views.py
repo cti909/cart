@@ -181,110 +181,79 @@ def cart_delete(request, id):
 
 @csrf_exempt
 def order_view(request):    
-    request.session['number_product'] = []
+    # request.session['number_product'] = []
+    if 'product_cart' in request.session:
+        del request.session['product_cart']
+    if 'product_cart_view' in request.session:
+        del request.session['product_cart_view']
+    if 'total_price' in request.session:
+        del request.session['total_price']
     if request.user.is_authenticated:
         body_unicode = request.body.decode('utf-8')
         datas = json.loads(body_unicode)
         print(datas)
         if datas:
-            list_product = []
+            # list_product = []
             total_all = 0
             auto_id = 1
             product_cart = []
+            product_cart_view = []
             for data in datas:
                 product = Cart.objects.get(id=data['cart_product_id'])
                 id = auto_id
                 auto_id += 1
                 name = product.product_id.name
-                image = product.product_id.image
+                image = product.product_id.image.url
                 price = product.product_id.price
                 # number = int(request.POST.get('number'+id_product))
                 number = int(data['number'])
                 total = price*number
                 total_all += total
-
-                # check = Product.objects.get(id=product.product_id.id)
-                # if number > check.number:
-                    # messages.add_message(request, messages.INFO, 'Hello world.')
-                    # return redirect('cartid_home')
-                    # messages.add_message(request, messages.INFO, 'Empty od this product')
-                    # context = {'message': 'Incorrect quantity'}
-                    # request.session
-                    # return redirect('cart_home')
+                # print(product.product_id.image.url)
                 dic = {'id': id,
                         'name': name,
                         'image': image,
                         'number': number,
                         'price': price,
                         'total': total}
-                list_product.append(dic)
+                # list_product.append(dic)
                 temp = {
                         'id': data['cart_product_id'],
                         'number': number
                     }
+                
+                if 'product_cart_view' not in request.session:
+                    request.session['product_cart_view'] = [dic]
+                else:
+                    product_cart_view = request.session.get('product_cart_view')
+                    product_cart_view.append(dic)
+                    request.session['product_cart_view'] = product_cart_view
+
                 if 'product_cart' not in request.session:
                     request.session['product_cart'] = [temp]
                 else:
                     product_cart = request.session.get('product_cart')
                     product_cart.append(temp)
                     request.session['product_cart'] = product_cart
-                
-            context = {'list_product': list_product, 'total_price': total_all}
-            return render(request, 'payment_form.html',context)
-            # return JsonResponse({})
+            if 'total_price' not in request.session:
+                request.session['total_price'] = total_all   
+            return JsonResponse({}, safe=False)
         else:
             return redirect('cart_home')
-        # if list:
-        #     list_product = []
-        #     total_all = 0
-        #     auto_id = 1
-        #     product_cart = []
-        #     for id_product in list:
-        #         product = Cart.objects.get(id=id_product)
-        #         id = auto_id
-        #         auto_id += 1
-        #         name = product.product_id.name
-        #         image = product.product_id.image
-        #         price = product.product_id.price
-        #         # number = int(request.POST.get('number'+id_product))
-        #         number = product.number
-        #         total = price*number
-        #         total_all += total
-
-        #         check = Product.objects.get(id=product.product_id.id)
-        #         if number > check.number:
-        #             # messages.add_message(request, messages.INFO, 'Hello world.')
-        #             # return redirect('cartid_home')
-        #             # messages.add_message(request, messages.INFO, 'Empty od this product')
-        #             # context = {'message': 'Incorrect quantity'}
-        #             # request.session
-        #             return redirect('cart_home')
-        #         dic = {'id': id,
-        #                 'name': name,
-        #                 'image': image,
-        #                 'number': number,
-        #                 'price': price,
-        #                 'total': total}
-        #         list_product.append(dic)
-        #         temp = {
-        #                 'id': id_product,
-        #                 'number': number
-        #             }
-        #         if 'product_cart' not in request.session:
-        #             request.session['product_cart'] = [temp]
-        #         else:
-        #             product_cart = request.session.get('product_cart')
-        #             product_cart.append(temp)
-        #             request.session['product_cart'] = product_cart
-                
-        #     context = {'list_product': list_product, 'total_price': total_all}
-        #     return render(request, 'payment_form.html',context)
-        # else:
-        #     return redirect('cart_home')
     else:
         return redirect('loginPage')
 
+def order_view_temp(request):
+    # data = request.session.get('product_cart_view')
+    # for product in data:
+    #     print(product)
+    # del request.session['product_cart_view']
+    # del request.session['product_cart']
+    
+    return render(request, 'payment_form.html',{})
+
 def payment(request):
+    
     if request.POST.get('receiver') == "" or request.POST.get('phone') == "" or request.POST.get('address') == "":
         # nhap ko du
         # messages.add_message(request, messages.WARNING, 'Incorrect input')
@@ -332,17 +301,18 @@ def payment(request):
             delpro.number = delpro.number - product['number']
             delpro.save()
         del request.session['product_cart']
+        del request.session['product_cart_view']
         return redirect('history_home')
 
 def history_home(request):
     if request.user.is_authenticated:
         list_order = []
         order = Order.objects.filter(user_id=request.user.id)
-        total_price = 0
         auto_id = 1
         # if auto_id % 2 == 1: color_table = 0 
         # else: color_table = 1
         for order_obj in order:
+            total_price = 0
             tg = []      
             # print(order_obj.id)
             order_detail = OrderDetail.objects.filter(order_id=order_obj.id)

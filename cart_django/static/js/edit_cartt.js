@@ -46,5 +46,6 @@ let order_view = (url_action) => {
         dataType : "json",
     }).done(function(data){
         console.log(data);
+        window.location.href = "order_view_temp" ;
     });
 }

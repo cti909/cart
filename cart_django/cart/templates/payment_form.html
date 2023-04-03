@@ -38,7 +38,7 @@
                   </tr>
                 </thead>
                 <tbody class="text-center">
-                {% for product in list_product %}
+                {% for product in request.session.product_cart_view %}
                 <tr>
                     <td>
                         {{product.id}}
@@ -47,7 +47,7 @@
                         {{product.name}}
                     </td>
                     <td>
-                        <img class="mg-thumbnail cart_img" src="/media/{{product.image}}" alt="">
+                        <img class="mg-thumbnail cart_img" src="{{product.image}}" alt="">
                     </td>
                     <td>
                         {{product.number}}
@@ -62,7 +62,7 @@
                 {% endfor %}
                 </tbody>
             </table>
-            <h5>Total of price: {{total_price}}</h5>
+            <h5>Total of price: {{request.session.total_price}}</h5>
             <button type="submit" class="btn btn-primary d-block" style="margin: 0 auto;">Confirm to order</button>
         </form>
     </div>
