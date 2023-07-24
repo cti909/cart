@@ -14,8 +14,11 @@ def comment_add(request,product_id, path):
     print(path)
     print(product_id)
     if(cmt.count() == 0):
+        print("create new")
         path_current = "0001"
+        is_create = 1
     else:
+        print("create old")
         cmt_last = Comment.objects.filter(path=path).filter(product_id=product_id)
         for ptu in cmt_last: # 1ptu
             cmt_current_length = ptu.path_length + 1
@@ -61,6 +64,12 @@ def comment_add(request,product_id, path):
     print(path_current)
     cmt_temp  = Comment.objects.filter(product_id=product_id).latest('id')
     
+    comment_children = Comment.objects.filter(product_id=product_id).filter(path__startswith = path)
+    cmt_id = []
+    cmt_path = []
+    for cmt in comment_children:
+        cmt_id.append(cmt.id)
+        cmt_path.append(cmt.path)
     context = {
         'is_create': is_create,
         'request_user_id': request.user.id,
@@ -68,11 +77,12 @@ def comment_add(request,product_id, path):
         'content': cmt_temp.content,
         'count_like': cmt_temp.count_like,
         'path': cmt_temp.path,
-        'check_like': 'nolike',
+        'check_like': None,
         'user_id': cmt_temp.user_id.id,
         'user_name': cmt_temp.user_id.name,
         'product_id': product_id,
-
+        'comment_child_id': cmt_id,
+        'comment_child_path': cmt_path,
     }
     json_cmt = json.dumps(context)
     return JsonResponse(json_cmt, safe=False)

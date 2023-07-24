@@ -45,7 +45,7 @@
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
                                     </a>
-                                    <a class="text-decoration-none" href="{% url 'product_delete' id=product.id%}">
+                                    <a class="text-decoration-none" id="product-delete-{{product.id}}" href="{% url 'product_delete' id=product.id%}">
                                         <button class="btn btn-danger border p-2 d-flex">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
@@ -80,8 +80,19 @@
 {% include 'footer.html' %}
 {% endblock footer %}
 {% block js_link %}
-
     <script src="{% static 'js/dashboard.js' %}"></script>
+    <script>
+        {% for product in products %}
+        document.getElementById("product-delete-{{product.id}}").addEventListener("click", function(event) {
+            event.preventDefault();
+            let href = this.getAttribute("href");
+            let result = confirm("You want delete this product?");
+            if (result) {
+                window.location.href = href;
+            }
+          });
+        {% endfor %}
+    </script>
 {% endblock js_link %}
 
 

@@ -7,128 +7,138 @@ from django.contrib import messages
 from json import dumps
 import os
 import json
+import math
 
 def product_home(request):
-    # them product vao cart
-    # print(request.user)
-    # if 'catagory' in request.session:
-    #     products.filter(catagory_id__contains = request.session.get('catagory'))
-    products =Product.objects.all()
-    token = ""
-    if 'search' in request.session:      
-        search = request.session.get('search').lower()
-        token = request.session.get('search')
-        products = Product.objects.filter(name__icontains = search)
-        
-    if 'field' in request.session:
-        field = request.session.get('field')
-        print(field)
-        products = products.order_by(request.session.get('field'))
+    page_product_limit = 9
 
-    if 'category' in request.session:
-        category = request.session.get('category')
-        if category != 'all':
-            cate = Category.objects.get(name = category)
-            products = products.filter(category_id = cate)
+    get_sort_name = request.GET.get("sort_name")
+    get_sort_field = request.GET.get("sort_field")
+    get_search_token = request.GET.get("search_token")
+    page_current = request.GET.get("page")
+
+    product_sort = ""
+    sort_field = "name"
+    sort_name = "asc"
+    search_token = ""
+
+    if get_sort_field is not None:
+        product_sort = get_sort_field
+        sort_field = get_sort_field
+    else:    
+        product_sort = sort_field
+
+    if get_sort_name is not None:
+        if get_sort_name == "desc":
+            product_sort = "-" + product_sort
+            sort_name = "desc"
+
+    if get_search_token is not None:
+        search_token = get_search_token
+
+    limit_start = 0
+    limit_end = page_product_limit
+
+    print(product_sort, search_token)
     
+    if page_current is not None:
+        page_current = int(page_current)
+        limit_start = page_product_limit*(page_current-1)
+        limit_end = page_product_limit*page_current
+    else:
+        page_current = 1
+
+    product_count = 0
+    if search_token == "":
+        product_count = math.ceil(Product.objects.all().count()/page_product_limit)
+    else:
+        product_count = math.ceil(Product.objects.filter(name__icontains=search_token).count()/page_product_limit)
+    products =Product.objects.filter(name__icontains=search_token).order_by(product_sort)[limit_start : limit_end]
+    categories = Category.objects.all()
+    fields = {"name","price","producer"}
+    print(math.ceil(products.count()/page_product_limit))
     context = {
-        'products': products,
-        'token': token
-        }
+        'fields': fields,
+        'page_current': page_current,
+        'page_count': product_count,
+        'sort_name': sort_name,
+        'sort_field': sort_field,
+        'search_token': search_token,
+        'categories': categories,
+        'products': products
+    }
     return render(request,'home.html',context)
 
-def product_category(request, category):
-    request.session['category'] = category
-    print(category)
-    return redirect('product_home')
+def product_categories(request, id):
+    page_product_limit = 6
+    get_sort_name = request.GET.get("sort_name")
+    get_sort_field = request.GET.get("sort_field")
+    get_search_token = request.GET.get("search_token")
+    page_current = request.GET.get("page")
+    product_sort = ""
+    sort_field = "name"
+    sort_name = "asc"
+    search_token = ""
+    limit_start = 0
+    limit_end = page_product_limit
 
-def product_search(request):
-    token = request.POST.get('search')
-    request.session['search'] = token
-    # products = Product.objects.filter(name__contains = token)
-    # context = {'products':products}
-    # return render(request, 'home.html', context)
-    return redirect('product_home')
+    if get_sort_field is not None:
+        product_sort = get_sort_field
+        sort_field = get_sort_field
+    else:    
+        product_sort = sort_field
+    if get_sort_name is not None:
+        if get_sort_name == "desc":
+            product_sort = "-" + product_sort
+            sort_name = "desc"
+    if get_search_token is not None:
+        search_token = get_search_token
+    if page_current is not None:
+        page_current = int(page_current)
+        limit_start = page_product_limit*(page_current-1)
+        limit_end = page_product_limit*page_current
+    else:
+        page_current = 1
 
-def product_sort(request):
-    field = request.POST.get('field')
-    sort = request.POST.get('sort')
-    if field == None or sort == None:
-        # xu ly
-        return redirect('product_home')
-    if sort == 'desc':
-        field = '-' + field
-
-    request.session['field'] = field
-    # products = Product.objects.order_by(field)
-    
-    # context = {'products': products}
-    # return render(request, 'home.html', context)
-    return redirect('product_home')
+    categories = Category.objects.all()
+    if (id == 0):
+        category = categories
+    else:
+        category = Category.objects.get(id=id)
+    category_sub = category.get_descendants(include_self=True)
+    products = Product.objects.filter(category_id__in=category_sub)
+    product_count = 0
+    if search_token == "":
+        product_count = math.ceil(products.count()/page_product_limit)
+    else:
+        product_count = math.ceil(products.filter(name__icontains=search_token).count()/page_product_limit)
+    products = products.filter(name__icontains=search_token).order_by(product_sort)[limit_start : limit_end]
+    categories = Category.objects.all()
+    fields = {"name","price","producer"}
+    print(math.ceil(products.count()/page_product_limit))
+    context = {
+        'fields': fields,
+        'page_current': page_current,
+        'page_count': product_count,
+        'sort_name': sort_name,
+        'sort_field': sort_field,
+        'search_token': search_token,
+        'categories': categories,
+        'products': products
+    }
+    return render(request,'home.html',context)
 
 def product_detail(request, id):
     comments = Comment.objects.all()
     product = Product.objects.get(id = id)
     related_products = Product.objects.filter(category_id = product.category_id)
-    related_products =related_products.exclude(id=id)
-    
-    # data = []
-    # for pro in related_products:
-    #     if pro.id == id:
-    #         continue
-    #     temp = {
-    #         'name': pro.name,
-    #         'number': pro.number,
-    #         'price': pro.price,
-    #         'describe': pro.describe,
-    #         'producer': pro.producer,
-    #         'image': pro.image,
-    #     }
-    #     data.append(temp)
-    # dataJSON = dumps(data)
-    # print(dataJSON)
-    
-    # comments = Comment.objects.filter(product_id=product).order_by('path')
-    sql = '''SELECT DISTINCT(comments_comment.id), comments_comment.content, comments_comment.product_id_id,comments_comment.user_id_id, comments_comment.path,comments_comment.path_length,comments_like.user_id_id as check_like 
-            FROM comments_comment 
-                LEFT JOIN comments_like ON (comments_comment.id = comments_like.comment_id_id and comments_like.user_id_id = %s) 
-                LEFT JOIN accounts_user ON comments_comment.user_id_id = accounts_user.id WHERE product_id_id = %s 
-            GROUP BY comments_like.id,comments_comment.id, comments_comment.content, comments_comment.product_id_id,comments_comment.user_id_id,comments_comment.path, comments_comment.path_length
-            ORDER BY comments_comment.path ASC;'''
-    params = (request.user.id, id)
-    
-    # comments = Comment.objects.raw(sql, params)
-    # json_cmt = []
-    # for cmt in comments:
-    #     json_cmt.append({
-    #         'comment_id': cmt.id,
-    #         'comment_content': cmt.content,
-    #         'product_id': cmt.product_id.id,
-    #         'user_id_id': cmt.user_id.id,
-    #         'path': cmt.path,
-    #         'path_length':cmt.path_length,
-    #         'check_like': cmt.check_like
-    #     })
-    # json_cmt = json.dumps(json_cmt)
-    # print(json_cmt)
-    # for comment in comments:
-    #     str = comment.path
-    #     likes = Like.objects.filter(comment_id = comment)
-    #     # print(likes.query)
-    #     comment.count_likes = likes.count()
-    #     # kiem tra request.user da like chua
-    #     for like in likes:
-    #         if request.user == like.user_id:
-    #             comment.is_like = True
-    #             break
-    #         else:
-    #             comment.is_like = False
+    related_products =related_products.exclude(id=id)[0 : 3]
     context = {
-        # 'comment_detail': json_cmt,
         'product': product, 
         'related_products': related_products,
+        'related_products_count': len(related_products),
         'comments': comments
-        }
+    }
     # return JsonResponse(data)
     return render(request, 'product_detail.html', context)
 

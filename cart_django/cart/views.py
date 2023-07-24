@@ -11,25 +11,19 @@ from django.http import HttpResponse,JsonResponse
 def cart_home(request):
     # del request.session['id_cart']
     # del request.session['temple_cart']
-    if 'search' in request.session:
-        del request.session['search']
-    if 'field' in request.session:
-        del request.session['field']
-    if 'category' in request.session:
-        del request.session['category']
-        
     if request.user.is_authenticated:
-        products = Cart.objects.all()
-        
+        products = Cart.objects.filter(user_id = request.user)       
     elif 'temple_cart' in request.session:
         products = request.session.get('temple_cart')
         print(request.session.get('temple_cart'))
         temp = []
         for ptu in products:
             pro = Product.objects.get(id=ptu['product_id'])
-            ptu = {'id': ptu['id'],
+            ptu = {
+                'id': ptu['id'],
                 'number':ptu['number'],
-                'product_id':pro}
+                'product_id':pro,
+                }
             temp.append(ptu)
             # print(pro)
         products = temp
@@ -55,7 +49,8 @@ def cart_add(request):
         return render(request,'cart_home.html', context)
     new_cart = {'id':request.session.get('id_cart'),
                 'number': data['number'], 
-                'product_id': data['product_id']
+                'product_id': data['product_id'],
+                'user_id': None
                 }
     if 'temple_cart' not in request.session:
         request.session['temple_cart'] = [new_cart]
@@ -64,11 +59,11 @@ def cart_add(request):
         list_cart.append(new_cart)
         request.session['temple_cart'] = list_cart
     request.session['id_cart'] += 1 
-
+    request.session['product_cart_count'] = request.session['id_cart']-1
     # print(request.session.get('temple_cart'))
 
     if request.user.is_authenticated:
-        cart_all = Cart.objects.all()
+        cart_all = Cart.objects.filter(user_id = request.user)
         check = False
         for product_idx in cart_all:
             # print(data['product_id'])
@@ -90,9 +85,12 @@ def cart_add(request):
                         # image = data['url_image'],
                         number = data['number'], 
                         # price = data['price'],
-                        product_id = product_object
+                        product_id = product_object,
+                        user_id = request.user
                         )
             cart.save()
+        product_cart = Cart.objects.filter(user_id = request.user)
+        request.session['product_cart_count'] = product_cart.count()
     # del request.session['id_cart']
     # del request.session['temp_le_cart']
     # context = {}
@@ -100,56 +98,12 @@ def cart_add(request):
     # return redirect('product_home')
     return HttpResponse('Add oke')
 
-# def cart_addp(request):
-#     product_object = Product.objects.get(id=request.POST.get('id'))
-#     if product_object.number == 0:
-#         # messages.add_message(request, messages.INFO, 'Empty of this product')
-#         return redirect('cart_home')
-#     if request.user.is_authenticated:
-#         cart_all = Cart.objects.all()
-#         check = False
-#         for product_idx in cart_all:
-#             if product_idx.product_id.id == request.POST.get('id'):
-#                 check = True
-#                 break
-#         if check == False:
-#             cart = Cart.objects.create(
-#                         # name = data['name'], 
-#                         # image = data['url_image'],
-#                         number = data['number'], 
-#                         # price = data['price'],
-#                         product_id = product_object
-#                         )
-#             cart.save()
-#     else:
-#         # xu li
-#         return redirect('product_home')
-
-
-# def cart_edit(request, id):
-#     if request.method == 'POST':
-#         if request.user.is_authenticated:
-#             product = Cart.objects.get(id=id)
-#             num = request.POST.get('number')
-#             product.number = num
-#             product.save()
-#             return redirect('cart_home')
-#         else:
-#             return
-#     else:
-#         if request.user.is_authenticated:
-#             product = Cart.objects.get(id=id)
-#             context = {'product': product, 'action': 'Edit'}
-#             return render(request, 'cart_form.html', context)
-#         else: 
-#             # xu ly chua dang nhap
-#             return
-
 def cart_edit(request, id, number):
     
     if request.method == 'POST':
         product = Product.objects.get(id=id)
-        cart = Cart.objects.get(product_id=product.id)
+        cart = Cart.objects.filter(user_id=request.user)
+        cart.get(product_id=product.id)
         if request.user.is_authenticated:
             cart.number = request.POST.get('num')
             cart.save()
@@ -163,21 +117,23 @@ def cart_edit(request, id, number):
        
 
 def cart_delete(request, id):
-        if request.user.is_authenticated:
-            Cart.objects.filter(id=id).delete()
+    if request.user.is_authenticated:
+        Cart.objects.filter(id=id).delete()
+        request.session['product_cart_count'] -= 1
+        return redirect('cart_home')
+    else:
+        request.session['product_cart_count'] -= 1
+        print(id)
+        index = 0
+        if 'temple_cart' in request.session:
+            list_cart = request.session.get('temple_cart')
+            print(list_cart)
+            for ptu in list_cart:
+                if ptu['id'] == int(id):
+                    list_cart.pop(index)
+                index += 1
+            request.session['temple_cart'] = list_cart
             return redirect('cart_home')
-        else:
-            print(id)
-            index = 0
-            if 'temple_cart' in request.session:
-                list_cart = request.session.get('temple_cart')
-                print(list_cart)
-                for ptu in list_cart:
-                    if ptu['id'] == int(id):
-                        list_cart.pop(index)
-                    index += 1
-                request.session['temple_cart'] = list_cart
-                return redirect('cart_home')
 
 @csrf_exempt
 def order_view(request):    
@@ -200,6 +156,7 @@ def order_view(request):
             product_cart_view = []
             for data in datas:
                 product = Cart.objects.get(id=data['cart_product_id'])
+                product_checked = Product.objects.get(id=product.product_id.id)
                 id = auto_id
                 auto_id += 1
                 name = product.product_id.name
@@ -210,31 +167,32 @@ def order_view(request):
                 total = price*number
                 total_all += total
                 # print(product.product_id.image.url)
-                dic = {'id': id,
-                        'name': name,
-                        'image': image,
-                        'number': number,
-                        'price': price,
-                        'total': total}
-                # list_product.append(dic)
-                temp = {
-                        'id': data['cart_product_id'],
-                        'number': number
-                    }
-                
-                if 'product_cart_view' not in request.session:
-                    request.session['product_cart_view'] = [dic]
-                else:
-                    product_cart_view = request.session.get('product_cart_view')
-                    product_cart_view.append(dic)
-                    request.session['product_cart_view'] = product_cart_view
+                if(product_checked.number > 0 ):
+                    dic = {'id': id,
+                            'name': name,
+                            'image': image,
+                            'number': number,
+                            'price': price,
+                            'total': total}
+                    # list_product.append(dic)
+                    temp = {
+                            'id': data['cart_product_id'],
+                            'number': number
+                        }
+                    
+                    if 'product_cart_view' not in request.session:
+                        request.session['product_cart_view'] = [dic]
+                    else:
+                        product_cart_view = request.session.get('product_cart_view')
+                        product_cart_view.append(dic)
+                        request.session['product_cart_view'] = product_cart_view
 
-                if 'product_cart' not in request.session:
-                    request.session['product_cart'] = [temp]
-                else:
-                    product_cart = request.session.get('product_cart')
-                    product_cart.append(temp)
-                    request.session['product_cart'] = product_cart
+                    if 'product_cart' not in request.session:
+                        request.session['product_cart'] = [temp]
+                    else:
+                        product_cart = request.session.get('product_cart')
+                        product_cart.append(temp)
+                        request.session['product_cart'] = product_cart
             if 'total_price' not in request.session:
                 request.session['total_price'] = total_all   
             return JsonResponse({}, safe=False)
@@ -253,7 +211,6 @@ def order_view_temp(request):
     return render(request, 'payment_form.html',{})
 
 def payment(request):
-    
     if request.POST.get('receiver') == "" or request.POST.get('phone') == "" or request.POST.get('address') == "":
         # nhap ko du
         # messages.add_message(request, messages.WARNING, 'Incorrect input')
@@ -302,6 +259,8 @@ def payment(request):
             delpro.save()
         del request.session['product_cart']
         del request.session['product_cart_view']
+        product_cart = Cart.objects.filter(user_id = request.user)
+        request.session['product_cart_count'] = product_cart.count()
         return redirect('history_home')
 
 def history_home(request):
@@ -331,6 +290,7 @@ def history_home(request):
             temp = {
                 'auto_id': auto_id,
                 'receiver': order_obj.receiver,
+                'address': order_obj.address,
                 'date': order_obj.date,
                 'list_order': tg,
                 'count': order_detail.count(),
@@ -338,8 +298,8 @@ def history_home(request):
             }
             auto_id += 1
             list_order.append(temp)    
-        # print(list_order)
-        context = {'products': list_order}
+        # print(len(list_order))
+        context = {'products': list_order, 'order_count': len(list_order)}
         return render(request, 'history_home.html', context)
     else:
         return redirect('loginPage')

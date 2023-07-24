@@ -17,14 +17,3 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
-
-class Customer(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length=200)
-    username = models.CharField(unique=True, max_length=50)
-    password =models.CharField(max_length=200)
-    email = models.EmailField(unique=True, null=True)
-    phone = models.CharField(max_length=10, null=True)
-    address = models.CharField(max_length=200, null=True)
-    def __str__(self):
-        return self.username

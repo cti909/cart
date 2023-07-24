@@ -18,9 +18,8 @@
               Product
             </a>
           </li>
-          <li class="nav-item">
-            
-            <a class="nav-link" href="{% url 'cart_home' %}">
+          <li class="nav-item position-relative">
+            <a class="nav-link" href="{% url 'cart_home' %}" id="cart_count" cart-count="{{request.session.product_cart_count}}">
               <i class="fa-solid fa-cart-shopping"></i>
               Cart
             </a>
@@ -31,7 +30,7 @@
               History
             </a>
           </li>
-          {% if request.user.position == 'seller'  %}
+          {% if request.user.position == 'seller' %}
           <li class="nav-item">
             <a class="nav-link" href="{% url 'dashboard' %}">
               <i class="fa-solid fa-user-tie"></i>
@@ -50,15 +49,27 @@
         {% comment %} <p>{% request.session.get('user') %}</p> {% endcomment %}
         <div class="d-flex ">
           <span class="text-light">
-            Welcome:          
+            Welcome:
           </span>
           <span class="text-success mx-1">
             {{ request.user }}
           </span>
         </div>
-        <a href="{% url 'logoutPage' %}">
+        <div class=" dropdown">
+          <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-gear"></i>
+          </a>
+          <ul class="dropdown-menu" style="left: -85px; top:100%;" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{% url 'account_information' %}">My account</a></li>
+            <li><a class="dropdown-item" href="#">Helps</a></li>
+            <li><a class="dropdown-item" href="{% url 'change_password' %}">Reset password</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'logoutPage' %}">Log out</a></li>
+          </ul>
+        </div>
+        {% comment %} <a href="{% url 'logoutPage' %}">
           <button type="button" class="btn btn-primary ms-2">Log out</button>
-        </a>
+        </a> {% endcomment %}
         {% else %}
         <a href="{% url 'loginPage' %}">
           <button type="button" class="btn btn-primary ms-2">Log in</button>

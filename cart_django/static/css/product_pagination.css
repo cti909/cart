@@ -1,0 +1,6 @@
+#pagination {
+    list-style: none;
+}
+#pagination li {
+    cursor: pointer;
+}

@@ -10,7 +10,7 @@
 <div class="container py-3">
     <div class='border border-primary p-5'>
         <h2 class="text-center py-2">Payment</h2>
-        <form method="POST" action="{% url 'payment' %}">
+        <form method="POST" id="payment" action="{% url 'payment' %}">
             {% csrf_token %}
             <div class="mb-3">
                 <label for="receiver" class="form-label">Receiver</label>
@@ -71,3 +71,20 @@
 {% block footer %}
 {% include 'footer.html' %}
 {% endblock footer %}
+{% block js_link %}
+<script>
+  document.getElementById("payment").addEventListener("submit", function(event) {
+    event.preventDefault();
+    let receiver = document.getElementById("receiver");
+    let phone = document.getElementById("phone");
+    let address = document.getElementById("address");
+    if(receiver.value == "" || phone.value == "" || address.value == "") {
+        alert("You need enter full information!");
+    } else {
+        this.submit();
+    }
+  });
+</script>
+{% endblock js_link %}
+
+

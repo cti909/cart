@@ -72,18 +72,18 @@
                 {{product.product_id.price}}
             </td>
             <td>
-                <input class="text-center icon_size" type="checkbox" name="select_product" value="{{product.id}}" style="width: 25px; height: 25px;">
+                <input class="text-center icon_size" type="checkbox" name="select_product" value="{{product.id}}" number="{{product.number}}" max-number="{{product.product_id.number}}" style="width: 25px; height: 25px;">
                 
             </td>
             <td>
                 {% comment %} <a href="{% url 'cart_edit' id=product.id %}"> {% endcomment %}
                 {% comment %} <a href="{% url 'cart_edit' id=product.id %}"> {% endcomment %}
-                {% if request.user.is_authenticated %}
+                {% comment %} {% if request.user.is_authenticated %}
                 <a href="{% url 'cart_edit' id=product.id number=product.number %} ">
                     <i class="fa-solid fa-pen-to-square pe-2"></i>
                 </a>
-                {% endif %}
-                <a href="{% url 'cart_delete' id=product.id %}">
+                {% endif %} {% endcomment %}
+                <a type="button" class="btn btn-danger" id="product-delete-{{product.id}}" href="{% url 'cart_delete' id=product.id %}">
                     <i class="fa-solid fa-trash"></i>
                 </a>
             </td>
@@ -97,8 +97,13 @@
         </tbody>
     </table>
     <div class="d-flex py-2">
-        <h5 class="pe-3" style="margin: auto 0">Buy selected products</h5>
+        <strong class="pe-3" style="margin: auto 0">Buy selected products</strong>
         <button class="btn btn-primary" type="button" onClick="order_view(
+                                                                {% if request.user.is_authenticated %}
+                                                                1,
+                                                                {% else %}
+                                                                0,
+                                                                {% endif %}
                                                                 '{% url 'order_view' %}'
                                                             )">
             Buy 
@@ -113,5 +118,17 @@
 {% endblock footer %}
 {% block js_link %}
     {% load static %}
-    <script src="{% static 'js/edit_cartt.js' %}"></script>
+    <script src="{% static 'js/edit_carts.js' %}"></script>
+    <script>
+        {% for product in products %}
+        document.getElementById("product-delete-{{product.id}}").addEventListener("click", function(event) {
+            event.preventDefault();
+            let href = this.getAttribute("href");
+            let result = confirm("You want delete this product in cart?");
+            if (result) {
+                window.location.href = href;
+            }
+          });
+        {% endfor %}
+    </script>
 {% endblock js_link %}

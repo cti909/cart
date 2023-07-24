@@ -2,6 +2,7 @@ from django.db import models
 from  accounts.models import User
 from django.forms import ModelForm
 from PIL import Image
+from mptt.models import MPTTModel, TreeForeignKey
 # from uuid import uuid5
 # import os
 
@@ -10,11 +11,21 @@ from PIL import Image
 #     filename = "%s_%s.%s" % (instance.user.id, instance.questid.id, ext)
 #     return os.path.join('uploads', filename)
 
+# class Category(models.Model):
+#     id = models.BigAutoField(primary_key=True)
+#     name = models.CharField(max_length = 100)
+#     path = models.CharField(max_length=100, blank=True)
+#     path_length = models.IntegerField()
+#     def __str__(self):
+#         return self.name
 
-class Category(models.Model):
+class Category(MPTTModel):
     id = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length = 100)
-    # path = models.CharField(max_length=100, blank=True)
+    name = models.CharField(max_length=255)
+    parent = TreeForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    class MPTTMeta:
+        order_insertion_by = ['name']
+
     def __str__(self):
         return self.name
 
@@ -23,7 +34,7 @@ class Product(models.Model):
     name = models.CharField(max_length = 100)
     number = models.IntegerField()
     price = models.IntegerField()
-    describe = models.CharField(max_length = 100, null=True)
+    describe = models.CharField(max_length = 1000, null=True)
     producer = models.CharField(max_length = 100, null=True)
     image = models.ImageField(upload_to = 'product_img/')
     

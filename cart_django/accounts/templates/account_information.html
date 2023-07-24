@@ -1,0 +1,48 @@
+{% extends 'main.html' %}
+
+{% load static %}
+
+{% block head_link %}
+<link rel="stylesheet" href="{% static 'css/login_form.css' %}">
+{% endblock head_link %}
+
+{% block content %}
+
+
+<div class="container py-3" style="height: 65vh; max-width:500px">
+    <h2 class="text-center py-3">Information account:</h2>
+    <table class="table table-bordered">
+        <tr>
+            <th>ID</th>
+            <td>{{request.user.id}}</td>
+        </tr>
+        <tr>
+            <th>Name</th>
+            <td>{{request.user.name}}</td>
+        </tr>
+        <tr>
+            <th>Username</th>
+            <td>{{request.user.username}}</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>{{request.user.email}}</td>
+        </tr>
+        <tr>
+            <th>Phone</th>
+            <td>{{request.user.phone}}</td>
+        </tr>
+        <tr>
+            <th>Address</th>
+            <td>{{request.user.address}}</td>
+        </tr>
+        <tr>
+            <th>Position</th>
+            <td>{{request.user.position}}</td>
+        </tr>
+    </table>
+</div>
+{% endblock content %}
+{% block footer %}
+{% include 'footer.html' %}
+{% endblock footer %}

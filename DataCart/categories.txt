@@ -1,0 +1,36 @@
+categories:
+Electronics
+	+ mobile phones
+		1.
+		Samsung Galaxy A24
+		Samsung Galaxy A24 6GB - là thế hệ điện thoại thuộc dòng Galaxy vừa được nhà Samsung giới thiệu đến thị trường Việt Nam vào tháng 04/2023. Máy sở hữu cụm camera có độ phân giải chính 50 MP, chip tốt cùng màn hình Super AMOLED chất lượng.
+		VN
+		2.
+		iPhone 14 Pro Max
+		Điểm nhấn của sự kiện ra mắt sản phẩm tháng 9/2022 của Apple chính là siêu phẩm iPhone 14 Pro Max 128GB với thiết kế mặt trước đổi mới, camera nâng cấp mạnh mẽ và hiệu năng bùng nổ từ chip A16 Bionic, đáp ứng mọi nhu cầu của người dùng.
+		NA
+		3.
+		iPhone 14 Pro
+		Mới đây (09/2022), Apple đã tung ra thị trường mẫu điện thoại iPhone 14 series, trong đó có một cái tên nhận được nhiều sự quan tâm của giới công nghệ là iPhone 14 Pro, sở hữu hiệu năng mạnh mẽ, màn hình hiển thị hình ảnh chân thực và cụm camera cho khả năng chụp ảnh đẹp mắt.
+		NA
+		4.
+		
+	+ laptop
+Fashion
+	+ clothing
+	+ footwear
+	+ jewelry
+Health and Beauty
+	+ cosmetics
+	+ skincare
+	+ haircare
+Sports
+	+ sportswear
+	+ camping gear
+	+ gym equipment
+Toys
+
+Books
+	+ textbooks
+	+ manga
+	+ light novel

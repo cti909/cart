@@ -1,6 +1,9 @@
 {% extends 'dashboard_main.html' %}
 {% load static %}
 
+{% block head_link %}
+<link rel="stylesheet" href="{% static 'css/show_chart.css' %}">
+{% endblock head_link %}
 {% block content %}
 <div class="container py-3">
     <h3>Product</h3>
@@ -11,7 +14,7 @@
                     Total remaining products
                 </div>
                 <div class="card-body">
-                    {{total_product}}
+                    {{product_total}}
                 </div>
             </div>
         </div>
@@ -19,25 +22,38 @@
 
             <div class="card my-3 text-center">
                 <div class="card-header">
-                    Total product
+                    Type of product
                 </div>
                 <div class="card-body">
-                    0
+                    {{product_count}}
                 </div>
             </div>
         </div>
         <div class="col">
-
             <div class="card my-3 text-center">
                 <div class="card-header">
-                    Total product
+                    Number of products sold
                 </div>
                 <div class="card-body">
                     0
                 </div>
             </div>
         </div>
-        {% comment %} <canvas id="myChart"></canvas> {% endcomment %}
+    </div>
+    <div class="container py-3">
+        <h3>Chart</h3>
+        <div class="py-3">
+            <strong>-Chart of number products</strong>
+            <div class="chart" style="max-height:500px;">
+                <canvas id="number_products_chart" class=""></canvas>
+            </div>
+        </div>
+        <div class="py-3">
+            <strong>-Chart of price products</strong>
+            <div class="chart" style="max-height:500px;">
+                <canvas id="price_products_chart" class=""></canvas>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock content %}
@@ -45,49 +61,59 @@
 {% block footer %}
 {% include 'footer.html' %}
 {% endblock footer %}
+
 {% block js_link %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.min.js" integrity="sha512-v3ygConQmvH0QehvQa6gSvTE2VdBZ6wkLOlmK7Mcy2mZ0ZF9saNbbk19QeaoTHdWIEiTlWmrwAL4hS8ElnGFbA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="{% static 'js/dashboard.js' %}"></script>
-    {% comment %} <script>
-        $(document).ready(function() {
-            $.ajax({
-                url: "{% url 'statistical' %}",
-                type: "GET",
-                dataType: "json",
-                success: function(data) {
-                    var labels = [];
-                    var values = [];
-                    data.forEach(function(item) {
-                        labels.push(item.name);
-                        values.push(item.value);
-                    });
-                    var ctx = document.getElementById('myChart').getContext('2d');
-                    var myChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: 'My Dataset',
-                                data: values,
-                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                                borderColor: 'rgba(255, 99, 132, 1)',
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            scales: {
-                                yAxes: [{
-                                    ticks: {
-                                        beginAtZero: true
-                                    }
-                                }]
-                            }
-                        }
-                    });
-                }
-            });
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js" integrity="sha512-pumBsjNRGGqkPzKHndZMaAG+bir374sORyzM3uulLV14lN5LyykqNk8eEeUlUkB3U0M4FApyaHraT65ihJhDpQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    {% comment %} <script src="{% static 'js/dashboard.js' %}"></script> {% endcomment %}
+    <script>
+        let frame_length = {{products.count}};
+        let number_products_chart = document.getElementById('number_products_chart').getContext('2d');
+        let xValues = new Array();
+        let yValues = new Array();
+        {% for product in products %}
+        xValues.push("{{product.name}}");
+        yValues.push({{product.number}});
+        {% endfor %}
+        let chart_number = new Chart(number_products_chart, {
+            type: 'line',
+            data: {
+                labels: xValues,
+                datasets: [{
+                    label: 'Number of products',
+                    data: yValues,
+                    borderColor: 'RGB(100,100,100)',
+                    fill: false,
+                }]
+            },
+            options: {
+                legend: {display: false},
+            }
         });
-    </script> {% endcomment %}
+
+        let price_products_chart = document.getElementById('price_products_chart').getContext('2d');
+        let x = new Array();
+        let y = new Array();
+        {% for product in products %}
+        x.push("{{product.name}}");
+        y.push({{product.price}});
+        {% endfor %}
+        let chart_price = new Chart(price_products_chart, {
+            type: 'line',
+            data: {
+                labels: x,
+                datasets: [{
+                    label: 'Price of products',
+                    data: y,
+                    borderColor: 'RGB(100,100,100)',
+                    fill: false,
+                }]
+            },
+            options: {
+                legend: {display: false},
+            }
+        });
+    </script>
 {% endblock js_link %}
 
 

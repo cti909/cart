@@ -29,7 +29,7 @@
             <label for="name" class="form-label">Name</label>
             <input type="text" class="form-control" id="name" name="name"
                             {%if product%}
-                            value = {{product.name}}
+                            value = "{{product.name}}"
                             {%endif%} >
         </div>
         <div class="mb-3">
@@ -50,15 +50,31 @@
             <label for="describe" class="form-label">Describe</label>
             <input type="text" class="form-control" id="describe" name="describe"
                             {%if product%}
-                            value = {{product.describe}}
+                            value = "{{product.describe}}"
                             {%endif%} >
         </div>
         <div class="mb-3">
             <label for="producer" class="form-label">Producer</label>
             <input type="text" class="form-control" id="producer" name="producer"
                             {%if product%}
-                            value = {{product.producer}}
+                            value = "{{product.producer}}"
                             {%endif%} >
+        </div>
+        <div class="mb-3">
+            <label for="category" class="form-label">Category</label>
+            {% comment %} <input type="text" class="form-control" id="category" name="category"
+                            {%if product%}
+                            value = "{{product.category_id.name}}"
+                            {%endif%} > {% endcomment %}
+            <select class="form-control" id="category" name="category">
+                {% for category in categories %}
+                {% if product.category_id == category %}
+                <option value="{{category}}" selected>{{category}}</option>
+                {% else %}
+                <option value="{{category}}">{{category}}</option>
+                {% endif %}
+                {% endfor %}
+            </select>
         </div>
         <div class="mb-3">
             <label for="image" class="form-label d-block">Image</label>

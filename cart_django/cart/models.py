@@ -13,7 +13,7 @@ class Cart(models.Model):
     # price = models.IntegerField()
     # producer = models.CharField(max_length = 100, null=True)
     product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
-    
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
 
 class Order(models.Model):
     id = models.BigAutoField(primary_key=True)

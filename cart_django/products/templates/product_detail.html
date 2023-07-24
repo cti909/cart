@@ -12,21 +12,21 @@
 <div class="container">
     <div class="rounded my-3">
         <div class="row">
-            <div class="col">
+            <div class="col-4">
                 <img src="/media/{{product.image}}" class="img-thumbnail resize" alt="error">
             </div>
-            <div class="col">
+            <div class="col-8">
                 <div class="d-flex py-2">
-                    <h3>Name of product:</h3>
-                    <h3 class="ps-2">{{product.name}}</h3>
+                    <h3>Name:</h3>
+                    <p class="ps-2 fs-4" style="margin:0;">{{product.name}}</p>
                 </div>
                 <div class="d-flex py-2">
-                    <h3>Number of product:</h3>
-                    <h3 class="ps-2 number" value="{{product.number}}">{{product.number}}</h3>
+                    <h3>Number:</h3>
+                    <p class="ps-2 fs-4 number" style="margin:0;" value="{{product.number}}">{{product.number}}</p>
                 </div>
                 <div class="d-flex py-2">
                     <h3>Price:</h3>
-                    <h3 class="ps-2">{{product.price}}$</h3>
+                    <p class="ps-2 fs-4" style="margin:0;">{{product.price}}$</p>
                 </div>
                 <div class="d-flex py-2">
                     <h3 class="me-2">Enter quantity:</h3>
@@ -38,17 +38,26 @@
                         <i class="fa-solid fa-plus"></i>
                     </button>
                 </div>
+                {% if product.number == 0 %}
+                <button disabled class="btn btn-primary" onclick="success_buy(
+                    {{product.id}},
+                    '{% url 'add_cart' %}'
+                )">
+                    Add to cart
+                </button>
+                {% else %}
                 <button class="btn btn-primary" onclick="success_buy(
                     {{product.id}},
                     '{% url 'add_cart' %}'
                 )">
                     Add to cart
                 </button>
+                {% endif %}
             </div>
         </div>
         <div class="container border border-dark rounded py-2 my-2">
             <h5>Describe</h5>
-            <p>{{product.describe}}</p>
+            <p>{{product.describe|safe }}</p>
         </div>
     </div>
 </div>
@@ -153,6 +162,9 @@
     <h3>Related products</h3>
     <div class="container border border-3 border-dark rounded py-3 my-3 position-relative">
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+            {% if related_products_count == 0 %}
+            <p>No related product</p>
+            {% else %}
             {% for related_product in related_products %}
             <div class="col related-product" idx>
                 <div class="card shadow-sm">
@@ -169,6 +181,7 @@
                 </div>
             </div>
             {% endfor %}
+            {% endif %}
         </div>
     </div>
 </div>
@@ -178,10 +191,17 @@
 {% endblock footer %}
 {% block js_link %}
     {% load static %}
-    <script src="{% static 'js/carte.js' %}"></script>
-    <script src="{% static 'js/show_commente.js'%}"></script>
+    <script src="{% static 'js/cartt.js' %}"></script>
     {% comment %} <script src="{% static 'js/buta_control.js' %}"></script> {% endcomment %}
     <script>
+        let number = $(".number").attr("value");
+        let id = $(".quantity").val();
+        id = parseInt(id)
+        number = parseInt(number)
+        if (number <= 0) {
+            $(".quantity").val(0);
+        }
+
         let show_comment = document.getElementById("comment").innerHTML;
         $.ajax({
             url: '{% url 'view_comment' id=product.id %}',
@@ -191,14 +211,17 @@
             success: function(data) {
                 comments = JSON.parse(data);
                 console.log(comments)
+                if (comments.length == 0) {
+                    document.getElementById("comment").innerHTML = "<p>No comments</p>"
+                }
                 array_id = [];
                 array_path = []
                 for (let i = 0; i < comments.length; i++) {
                     array_id.push(comments[i].id);
                     array_path.push(comments[i].path);
                 }
-                for (let i = 0; i < comments.length; i++) {                    
-                    cmt = comments[i];
+                for (let i = 0; i < comments.length; i++) {             
+                    let cmt = comments[i];
                     let comment_edit = "/comment/comment_edit/"+{{product.id}}+"/"+cmt.id;
                     let comment_delete = "/comment/comment_delete/"+cmt.id;
                     let like_change = "/comment/like_change/"+cmt.id;
@@ -221,8 +244,8 @@
                                             like_change,
                                             comment_add
                                             );
+                    
                     if (cmt.path_length == 0) {
-                        {% comment %} console.log(cmt.path); {% endcomment %}
                         document.getElementById("comment").innerHTML += node_comment;
                     } else {
                         path_parent = cmt.path.slice(0,-5);
@@ -230,8 +253,23 @@
                         id_cmt = array_id[index]
                         document.getElementById("content_card"+id_cmt).innerHTML += node_comment;
                     }
-                    
                 }
+                for (let i = 0; i < comments.length; i++) {
+                    let cmt = comments[i];
+                    let comment_add = "/comment/comment_add/"+{{product.id}}+"/"+cmt.path;
+                    document.getElementById('form_cmt'+cmt.id).addEventListener('submit', function(event) {
+                        console.log("success"+cmt.id)
+                        event.preventDefault();
+                        add_form(cmt.id, cmt.path, comment_add)
+                    });
+                }
+
+                document.getElementById('form_cmt0').addEventListener('submit', function(event) {
+                    console.log("child")
+                    event.preventDefault();
+                    add_form(0, '0000', "/comment/comment_add/"+{{product.id}}+"/0000")
+                });
+
             },
             error: function(xhr, status, error) {
                 console.log(error);
@@ -239,4 +277,5 @@
         })
         
     </script>
+    <script src="{% static 'js/show_comments.js'%}"></script>
 {% endblock js_link %}
